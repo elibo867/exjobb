@@ -1,6 +1,7 @@
 
 # coding: utf-8
 
+<<<<<<< HEAD
 # In[ ]:
 
 
@@ -18,13 +19,36 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 # In[ ]:
+=======
+# In[807]:
+
+
+from biopandas.pdb import PandasPdb
+from math import exp
+import numpy as np
+import matplotlib.pyplot as plt
+import sys
+from matplotlib import cm
+from scipy import spatial
+from mpl_toolkits.mplot3d import Axes3D
+#%matplotlib inline  
+
+
+# In[808]:
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
 
 
 def centre_model(atoms):
     '''Calculate the centre of gravity and "moves" the protein so the CG is located in origo.'''
+<<<<<<< HEAD
     #Find centre of gravity and subtract from every coordinate 
     CG=[atoms.x_coord.mean(),atoms.y_coord.mean(), atoms.z_coord.mean()]     
     atoms['x_coord']=atoms.x_coord.subtract(CG[0])
+=======
+    
+    CG=[atoms.x_coord.mean(),atoms.y_coord.mean(), atoms.z_coord.mean()]     
+    atoms['x_coord']=atoms.x_coord.subtract(CG[0]) #subtracts CG coordinate from all coordinates
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
     atoms['y_coord']=atoms.y_coord.subtract(CG[1])
     atoms['z_coord']=atoms.z_coord.subtract(CG[2])
     
@@ -32,14 +56,22 @@ def centre_model(atoms):
     return atoms
 
 
+<<<<<<< HEAD
 # In[ ]:
+=======
+# In[809]:
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
 
 
 def atoms_to_map(atoms, atom_type):
     
+<<<<<<< HEAD
     ''''Selects the rows of the atoms df of the given atom type, returns them in a df'''
 
     #Create a dictionary with all different atom types. (residue name, atom name) or (atom name) as key and atom type as value
+=======
+    
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
     atom_types_dict={ #Type1 - Sulfur/ selenium
                     ('CYS', 'SG') : 'Type1',
                     ('MET', 'SD') : 'Type1',
@@ -162,6 +194,7 @@ def atoms_to_map(atoms, atom_type):
                     ('CA'): 'Type11'#and backbone CA 
                     }
     
+<<<<<<< HEAD
     #Iterate over every atom row and delete if not of the given type. 
     #If the (res, atom_name) tuple doesn't exist as key in atom_types_dict. 
     #See if just the (atom_name) does. If not, print what atom and remove it. 
@@ -229,11 +262,59 @@ def create_density_map(atoms):
         
         
     #For all positions neighbouring (within a distance of 2 Angstrom) 
+=======
+    
+    new_atoms=atoms
+
+    for index,row in atoms.iterrows(): 
+        
+        if (row['residue_name'], row['atom_name']) not in atom_types_dict.keys():
+            
+            if (row['atom_name']) not in atom_types_dict.keys():
+                print 'MISSAT EN ATOM OJ' , (row['residue_name'], row['atom_name'])
+                new_atoms=new_atoms[new_atoms.index != index] #delete row 
+            
+            elif atom_types_dict[(row['atom_name'])] != atom_type:
+                new_atoms=new_atoms[new_atoms.index != index] #delete row if not right type
+   
+        elif atom_types_dict[(row['residue_name'], row['atom_name'])] != atom_type:
+            new_atoms=new_atoms[new_atoms.index != index] #delete row if not in atoms_types dict 
+
+    return new_atoms
+
+
+# In[810]:
+
+
+def create_density_map(atoms):
+    
+    dens_map=np.zeros((120,120,120)) #120x120x120 matrix filled w/ zeroes
+
+    x_s=atoms.x_coord.subtract(-60) #adding 60 (subtracting -60, how to du addition???????)
+    y_s= atoms.y_coord.subtract(-60)
+    z_s=atoms.z_coord.subtract(-60)
+    
+    warning=0
+    
+    if x_s.max()>119 or y_s.max()>119 or z_s.max()>119 : 
+        print'This protein is to big for the grid'
+        warning=1
+        return dens_map, warning
+    
+    coords=[x_s, y_s, z_s]
+    coords=np.array(coords).T.tolist() #transpose the coordinate list
+ 
+    for i in range(len(coords)):
+        x=int(round(coords[i][0]))
+        y=int(round(coords[i][1]))
+        z=int(round(coords[i][2]))
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
         
         for  k in range(x-2,x+3): #need to take +3 to make it get to +2
             for l in range(y-2,y+3):
                 for m in range(z-2,z+3):
                     
+<<<<<<< HEAD
     #If the position k,l,m  is the coordinate we are investigating, r=0.   
                     if k==x and l==y and m==z: #if xyz = klm , r=0 
                         dens_map[k][l][m]+=exp(0)
@@ -256,10 +337,31 @@ def plot_map(dens_map):
     #convert df to list of lists to be able to plot it. 
     #Think there is a np.tolist function that might be better?s
     all_data=[]
+=======
+                    if k==x and l==y and m==z: #if xyz = klm , r=0 
+                        dens_map[k][l][m]+=exp(0)
+                    elif ((x-1)<= k <=(x+1)) and ((y-1)<=l<=(y+1)) and ((z-1)<=m<=(z+1)):       
+                        dens_map[k][l][m]+=exp(1/2)
+                    else:
+                        dens_map[k][l][m]+=exp(-2)
+
+
+    return dens_map, warning
+
+
+# In[811]:
+
+
+def plot_map(dens_map):
+
+    #convert df to list of lists
+    values=[]
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
     for i in range(120):
         for j in range(120):
             for k in range(120):
                 if dens_map[i][j][k]!=0:
+<<<<<<< HEAD
                     all_data.append([i , j , k , dens_map[i][j][k]])
     
     #transpose the list 
@@ -270,6 +372,16 @@ def plot_map(dens_map):
     density=all_data[3]
     
     #pick a colormap
+=======
+                    values.append([i , j , k , dens_map[i][j][k]])
+
+    values=np.transpose(values)
+    x=values[0]
+    y=values[1]
+    z=values[2]
+    density=values[3]
+    
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
     cmap=cm.jet
     
     #no idea what's going on here
@@ -279,17 +391,26 @@ def plot_map(dens_map):
     density=np.array(density)
     colors[:,-1]=den_vals/den_vals.max()
    
+<<<<<<< HEAD
     #plot figure
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     
     density_plot= ax.scatter(x, y, z, c=colors)
+=======
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    surf = ax.scatter(x, y, z, c=colors)
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
     plt.show()
     
   
   
 
 
+<<<<<<< HEAD
 # In[ ]:
 
 
@@ -297,16 +418,28 @@ def main(argv):
 
     ppdb=PandasPdb()
     ppdb=ppdb.read_pdb(argv) #('HHpredAQ_TS1.pdb')
+=======
+# In[812]:
+
+
+def main():
+    ppdb=PandasPdb()
+    ppdb=ppdb.read_pdb('5eh6.pdb')
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
     atoms=ppdb.df['ATOM']
     atoms=centre_model(atoms)
     
     atom_types=['Type1','Type2','Type3','Type4','Type5','Type6','Type7','Type8','Type9','Type10','Type11']
     
+<<<<<<< HEAD
     hint=0
+=======
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
     all_density_maps={}
     for atom_type in atom_types:
         new_atoms=atoms_to_map(atoms, atom_type) # returns df only containing the atoms for choosen type
     
+<<<<<<< HEAD
         density_map,flag=create_density_map(new_atoms)
         
         if flag!=1: 
@@ -326,6 +459,24 @@ def main(argv):
 if __name__ == '__main__':
     main(sys.argv) 
     
+=======
+        density_map,warning=create_density_map(new_atoms)
+        
+        if warning==1: 
+            print 'The protein is to big to fit inside the grid for atoms of', atom_type
+        
+        else:
+            if np.any(density_map): # if there are atoms of chosen type (every density map that isn,t just zeroes)
+                all_density_maps[atom_type]=density_map
+                plot_map(density_map)
+        
+            else:
+                print 'There are no atoms of', atom_type
+            
+    
+   
+main()
+>>>>>>> aa5da18e695863bc1d95494270b7365a68f09abd
 
 
 # In[ ]:
