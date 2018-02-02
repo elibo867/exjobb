@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>For_several</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>Get_Densities</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
 <style type="text/css">
@@ -11776,24 +11776,267 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">Get_Densities</span>
+<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
+<span class="kn">from</span> <span class="nn">biopandas.pdb</span> <span class="kn">import</span> <span class="n">PandasPdb</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">exp</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">cm</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">spatial</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+<span class="c1">#remember to comment following row if running code in terminal </span>
+<span class="c1">#%matplotlib inline  </span>
+</pre></div>
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">density_maps</span><span class="o">=</span><span class="p">{}</span>
-    <span class="n">filenames</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-    <span class="c1">#for every file create 11 densitymaps. Generates dict of dicts. Kanske inte är smart?</span>
-    <span class="k">print</span> <span class="s1">&#39;Computing atom densities&#39;</span>
-    <span class="n">counter</span><span class="o">=</span><span class="mi">1</span>
-    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span> 
-        <span class="n">density_maps</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">=</span><span class="n">Get_Densities</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="k">print</span> <span class="n">counter</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span>
-        <span class="n">counter</span><span class="o">+=</span><span class="mi">1</span>
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">centre_model</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Calculate the centre of gravity and &quot;moves&quot; the protein so the CG is located in origo.&#39;&#39;&#39;</span>
+    
+    <span class="c1">#Find centre of gravity and subtract from every coordinate </span>
+    <span class="n">CG</span><span class="o">=</span><span class="p">[</span><span class="n">atoms</span><span class="o">.</span><span class="n">x_coord</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span><span class="n">atoms</span><span class="o">.</span><span class="n">y_coord</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">atoms</span><span class="o">.</span><span class="n">z_coord</span><span class="o">.</span><span class="n">mean</span><span class="p">()]</span>     
+    <span class="n">atoms</span><span class="p">[</span><span class="s1">&#39;x_coord&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">x_coord</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">CG</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">atoms</span><span class="p">[</span><span class="s1">&#39;y_coord&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">y_coord</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">CG</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">atoms</span><span class="p">[</span><span class="s1">&#39;z_coord&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">z_coord</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">CG</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    
+    <span class="k">return</span> <span class="n">atoms</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">atoms_to_map</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">atom_type</span><span class="p">):</span>  
+    <span class="sd">&#39;&#39;&#39;Selects the rows of the atoms df of the given atom type, returns them in a df&#39;&#39;&#39;</span>
+
+    <span class="c1">#Create a dictionary with all different atom types. (residue name, atom name) or (atom name) as key and atom type as value</span>
+    
+    <span class="n">atom_types_dict</span><span class="o">=</span><span class="p">{</span> <span class="c1">#Type1 - Sulfur/ selenium</span>
+     <span class="p">(</span><span class="s1">&#39;CYS&#39;</span><span class="p">,</span> <span class="s1">&#39;SG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type1&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;MET&#39;</span><span class="p">,</span> <span class="s1">&#39;SD&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type1&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;MSE&#39;</span><span class="p">,</span> <span class="s1">&#39;SE&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type1&#39;</span><span class="p">,</span>
+                     <span class="c1">#Type2 - Nitrogen (amide)</span>
+                    <span class="p">(</span><span class="s1">&#39;ASN&#39;</span><span class="p">,</span> <span class="s1">&#39;ND2&#39;</span><span class="p">):</span> <span class="s1">&#39;Type2&#39;</span><span class="p">,(</span><span class="s1">&#39;GLN&#39;</span><span class="p">,</span> <span class="s1">&#39;NE2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type2&#39;</span><span class="p">,</span> 
+                    <span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">):</span><span class="s1">&#39;Type2&#39;</span><span class="p">,</span>  <span class="c1">#backbone N inc N-terminal</span>
+                    <span class="c1">#Type3 - Nitrogen (aromatic)</span>
+                    <span class="p">(</span><span class="s1">&#39;HIS&#39;</span><span class="p">,</span> <span class="s1">&#39;ND1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type3&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;HIS&#39;</span><span class="p">,</span> <span class="s1">&#39;NE1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type3&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;NE1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type3&#39;</span><span class="p">,</span>
+                    <span class="c1">#Type4 - Nitrogen (guanidinium)</span>
+                    <span class="p">(</span><span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;NE&#39;</span><span class="p">):</span> <span class="s1">&#39;Type4&#39;</span><span class="p">,(</span><span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;NH1&#39;</span><span class="p">):</span> <span class="s1">&#39;Type4&#39;</span> <span class="p">,(</span><span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;NH2&#39;</span><span class="p">):</span> <span class="s1">&#39;Type4&#39;</span> <span class="p">,(</span><span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;NH3&#39;</span><span class="p">):</span> <span class="s1">&#39;Type4&#39;</span> <span class="p">,</span>
+                    <span class="c1">#Type5 - Nitrogen (ammonium)</span>
+                    <span class="p">(</span><span class="s1">&#39;LYS&#39;</span><span class="p">,</span> <span class="s1">&#39;NZ&#39;</span><span class="p">):</span> <span class="s1">&#39;Type5&#39;</span> <span class="p">,</span>
+                    <span class="c1">#Type6 - Oxygen (carbonyl)</span>
+                    <span class="p">(</span><span class="s1">&#39;ASN&#39;</span><span class="p">,</span> <span class="s1">&#39;OD1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type6&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="s1">&#39;GLN&#39;</span><span class="p">,</span> <span class="s1">&#39;OE1&#39;</span><span class="p">):</span> <span class="s1">&#39;Type6&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">):</span> <span class="s1">&#39;Type6&#39;</span><span class="p">,</span> <span class="c1"># backbone O (should be exept C terminal BUT HOW?)</span>
+                    <span class="c1">#Type7 - oxygen (hydroxyl)</span>
+                    <span class="p">(</span><span class="s1">&#39;SER&#39;</span><span class="p">,</span> <span class="s1">&#39;OG&#39;</span><span class="p">):</span> <span class="s1">&#39;Type7&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="s1">&#39;THR&#39;</span><span class="p">,</span> <span class="s1">&#39;OG1&#39;</span><span class="p">):</span> <span class="s1">&#39;Type7&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">):</span> <span class="s1">&#39;Type7&#39;</span> <span class="p">,</span>
+                    <span class="c1">#Type8 - Oxygen (carboxyl)</span>
+                    <span class="p">(</span><span class="s1">&#39;ASP&#39;</span><span class="p">,</span> <span class="s1">&#39;OD1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type8&#39;</span><span class="p">,(</span><span class="s1">&#39;ASP&#39;</span><span class="p">,</span> <span class="s1">&#39;OD2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ASP&#39;</span><span class="p">,</span> <span class="s1">&#39;OD3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;GLU&#39;</span><span class="p">,</span> <span class="s1">&#39;OE1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type8&#39;</span><span class="p">,</span> 
+                    <span class="p">(</span><span class="s1">&#39;GLU&#39;</span><span class="p">,</span> <span class="s1">&#39;OE2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;GLU&#39;</span><span class="p">,</span> <span class="s1">&#39;OE3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type8&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;OXT&#39;</span><span class="p">):</span><span class="s1">&#39;Type8&#39;</span><span class="p">,</span> <span class="c1">#C-terminal O NEEDS TO BE ADDED</span>
+                    <span class="c1">#Type9 - Carbon (sp2)</span>
+                    <span class="p">(</span><span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;CZ&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type9&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ASN&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type9&#39;</span><span class="p">,(</span><span class="s1">&#39;ASP&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type9&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;GLN&#39;</span><span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type9&#39;</span><span class="p">,</span> 
+                    <span class="p">(</span><span class="s1">&#39;GLU&#39;</span><span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type9&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">):</span><span class="s1">&#39;Type9&#39;</span><span class="p">,</span> <span class="c1">#backbone C</span>
+                    <span class="c1">#Type10 - carbon (aromatic)</span>
+                    <span class="p">(</span><span class="s1">&#39;HIS&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;HIS&#39;</span><span class="p">,</span> <span class="s1">&#39;CD2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;HIS&#39;</span><span class="p">,</span> <span class="s1">&#39;CE1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;CD1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;CD2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;CD3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;CE1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;CE2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;CE3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;CZ&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CD1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CD2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CD3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CE1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CE2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CE3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CZ1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CZ2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CZ3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;CH2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;CD1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;CD2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;CD3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;CE1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;CE2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;CE3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;CZ&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type10&#39;</span><span class="p">,</span>
+                    <span class="c1"># type11</span>
+                    <span class="p">(</span><span class="s1">&#39;ALA&#39;</span><span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;ASN&#39;</span><span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">):</span> <span class="s1">&#39;Type11&#39;</span> <span class="p">,</span> <span class="p">(</span> <span class="s1">&#39;ASP&#39;</span><span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;CYS&#39;</span><span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;GLN&#39;</span><span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> 
+                    <span class="p">(</span><span class="s1">&#39;GLN&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;GLU&#39;</span><span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;GLU&#39;</span><span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="s1">&#39;HIS&#39;</span><span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> 
+                    <span class="p">(</span><span class="s1">&#39;ILE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ILE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ILE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ILE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;ILE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CD1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;LEU&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;LEU&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;LEU&#39;</span> <span class="p">,</span> <span class="s1">&#39;CD1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;LEU&#39;</span> <span class="p">,</span> <span class="s1">&#39;CD2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;LEU&#39;</span> <span class="p">,</span> <span class="s1">&#39;CD3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;LYS&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;LYS&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;LYS&#39;</span> <span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;LYS&#39;</span> <span class="p">,</span> <span class="s1">&#39;CE&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;MET&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;MET&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;MET&#39;</span> <span class="p">,</span> <span class="s1">&#39;CE&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;MSE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;MSE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;MSE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CE&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;PHE&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;PRO&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;PRO&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;PRO&#39;</span> <span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;SER&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;THR&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;THR&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;TRP&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s1">&#39;TYR&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;VAL&#39;</span> <span class="p">,</span> <span class="s1">&#39;CB&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;VAL&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG1&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;VAL&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG2&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,</span> 
+                    <span class="p">(</span><span class="s1">&#39;VAL&#39;</span> <span class="p">,</span> <span class="s1">&#39;CG3&#39;</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;Type11&#39;</span><span class="p">,(</span><span class="s1">&#39;CA&#39;</span><span class="p">):</span> <span class="s1">&#39;Type11&#39;</span><span class="c1">#backbone CA </span>
+                    <span class="p">}</span>
+    
+    <span class="c1">#Iterate over every atom row and delete if not of the given type. </span>
+    <span class="c1">#If the (res, atom_name) tuple doesn&#39;t exist as key in atom_types_dict. </span>
+    <span class="c1">#See if just the (atom_name) does. If not, print what atom and remove it. </span>
+    <span class="c1">#If the key exists, see if the atom type is right, otherwise, remove the row. </span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>        
+        <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;residue_name&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;atom_name&#39;</span><span class="p">])</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atom_types_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span> 
+            <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;atom_name&#39;</span><span class="p">])</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atom_types_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>       
+                <span class="k">print</span> <span class="s1">&#39;No atom type defined for&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;residue_name&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;atom_name&#39;</span><span class="p">])</span>
+                <span class="n">atoms</span><span class="o">=</span><span class="n">atoms</span><span class="p">[</span><span class="n">atoms</span><span class="o">.</span><span class="n">index</span> <span class="o">!=</span> <span class="n">index</span><span class="p">]</span>
+            
+            <span class="k">elif</span> <span class="n">atom_types_dict</span><span class="p">[(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;atom_name&#39;</span><span class="p">])]</span> <span class="o">!=</span> <span class="n">atom_type</span><span class="p">:</span>
+                <span class="c1">#  if row[&#39;atom_name&#39;]==&#39;O&#39;:# and atoms.iloc[index+1] HJA&quot;LP</span>
+                   <span class="c1">#     print row[&#39;atom_name&#39;]</span>
+                <span class="n">atoms</span><span class="o">=</span><span class="n">atoms</span><span class="p">[</span><span class="n">atoms</span><span class="o">.</span><span class="n">index</span> <span class="o">!=</span> <span class="n">index</span><span class="p">]</span>
+   
+        <span class="k">elif</span> <span class="n">atom_types_dict</span><span class="p">[(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;residue_name&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;atom_name&#39;</span><span class="p">])]</span> <span class="o">!=</span> <span class="n">atom_type</span><span class="p">:</span>
+            <span class="n">atoms</span><span class="o">=</span><span class="n">atoms</span><span class="p">[</span><span class="n">atoms</span><span class="o">.</span><span class="n">index</span> <span class="o">!=</span> <span class="n">index</span><span class="p">]</span>
+
+    <span class="c1">#returns a dataframe with only atoms of the wanted type</span>
+    <span class="k">return</span> <span class="n">atoms</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">create_density_map</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Create a 120x120x120 matrix and compute the atom density for every coordinate&#39;&#39;&#39;</span>
+
+     <span class="c1">#120x120x120 matrix filled w/ zeroes    </span>
+    <span class="n">dens_map</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">120</span><span class="p">,</span><span class="mi">120</span><span class="p">,</span><span class="mi">120</span><span class="p">))</span>
+
+    <span class="c1"># Adding 60 to each coordinate - so they can be used for indexing the matrix</span>
+    <span class="c1">#Actually subtracting -60, because I don&#39;t know how to add. </span>
+    <span class="n">x_s</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">x_coord</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">)</span> 
+    <span class="n">y_s</span><span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">y_coord</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">)</span>
+    <span class="n">z_s</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">z_coord</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">)</span>
+
+    <span class="c1">#Controlling if the atom fits into the 120x120x120 grid</span>
+    <span class="c1">#If the maximum value of any coordinate is more than 119, the flag is assigned a 1</span>
+    <span class="c1">#and the function is interrupted</span>
+    <span class="c1">#Maybe 118 is better, since since the program is based on looking at the two closest neighbours? </span>
+    <span class="c1">#What happens at the edges? </span>
+
+    <span class="n">flag</span><span class="o">=</span><span class="mi">0</span>
+    
+    <span class="k">if</span> <span class="n">x_s</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">119</span> <span class="ow">or</span> <span class="n">y_s</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">119</span> <span class="ow">or</span> <span class="n">z_s</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">119</span> <span class="p">:</span> 
+        <span class="n">flag</span><span class="o">=</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="n">dens_map</span><span class="p">,</span> <span class="n">flag</span>
+    
+    <span class="c1">#For all positions neighbouring (within a distance of 2 Angstrom)  </span>
+        <span class="k">for</span>  <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="mi">3</span><span class="p">):</span> <span class="c1">#need to take +3 to make it get to +2</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="n">y</span><span class="o">+</span><span class="mi">3</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">z</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="n">z</span><span class="o">+</span><span class="mi">3</span><span class="p">):</span>
+
+    <span class="c1">#If the position k,l,m  is the coordinate we are investigating, r=0. </span>
+                    <span class="k">if</span> <span class="n">k</span><span class="o">==</span><span class="n">x</span> <span class="ow">and</span> <span class="n">l</span><span class="o">==</span><span class="n">y</span> <span class="ow">and</span> <span class="n">m</span><span class="o">==</span><span class="n">z</span><span class="p">:</span>
+                        <span class="n">dens_map</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">l</span><span class="p">][</span><span class="n">m</span><span class="p">]</span><span class="o">+=</span><span class="n">exp</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1">#If the position k,l,m is within 1Angstrom from x,y,z r=1</span>
+                    <span class="k">elif</span> <span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;=</span> <span class="n">k</span> <span class="o">&lt;=</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="ow">and</span> <span class="p">((</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">l</span><span class="o">&lt;=</span><span class="p">(</span><span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="ow">and</span> <span class="p">((</span><span class="n">z</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">m</span><span class="o">&lt;=</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">)):</span>       
+                        <span class="n">dens_map</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">l</span><span class="p">][</span><span class="n">m</span><span class="p">]</span><span class="o">+=</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1">#Otherwise, r=2 (since we&#39;re just looking at positions with a maximum distance of 2A)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dens_map</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">l</span><span class="p">][</span><span class="n">m</span><span class="p">]</span><span class="o">+=</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1">#Return density map, and a flag=0. </span>
+    <span class="k">return</span> <span class="n">dens_map</span><span class="p">,</span> <span class="n">flag</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">plot_map</span><span class="p">(</span><span class="n">dens_map</span><span class="p">):</span>
+
+    <span class="c1">#convert df to list of lists to be able to plot it. </span>
+    <span class="c1">#Think there is a np.tolist function that might be better?</span>
+
+    <span class="n">all_data</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">120</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">120</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">120</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">dens_map</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">all_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span> <span class="p">,</span> <span class="n">j</span> <span class="p">,</span> <span class="n">k</span> <span class="p">,</span> <span class="n">dens_map</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]])</span>
+
+    <span class="c1">#Transpose the list. </span>
+    <span class="n">all_data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">all_data</span><span class="p">)</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">all_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">all_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">z</span><span class="o">=</span><span class="n">all_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">density</span><span class="o">=</span><span class="n">all_data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="c1">#Pick a colormap </span>
+    <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span>
+    
+    <span class="c1">#no idea what&#39;s going on here</span>
+    <span class="n">den_vals</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+    <span class="n">colors</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+
+    <span class="n">density</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+    <span class="n">colors</span><span class="p">[:,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">den_vals</span><span class="o">/</span><span class="n">den_vals</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+    
+    <span class="n">surf</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">):</span>
+
+    <span class="n">ppdb</span><span class="o">=</span><span class="n">PandasPdb</span><span class="p">()</span>
+    <span class="n">ppdb</span><span class="o">=</span><span class="n">ppdb</span><span class="o">.</span><span class="n">read_pdb</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span> <span class="c1">#(&#39;HHpredAQ_TS1.pdb&#39;)</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="n">ppdb</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;ATOM&#39;</span><span class="p">]</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="n">centre_model</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+    
+    <span class="n">atom_types</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Type1&#39;</span><span class="p">,</span><span class="s1">&#39;Type2&#39;</span><span class="p">,</span><span class="s1">&#39;Type3&#39;</span><span class="p">,</span><span class="s1">&#39;Type4&#39;</span><span class="p">,</span><span class="s1">&#39;Type5&#39;</span><span class="p">,</span><span class="s1">&#39;Type6&#39;</span><span class="p">,</span><span class="s1">&#39;Type7&#39;</span><span class="p">,</span><span class="s1">&#39;Type8&#39;</span><span class="p">,</span><span class="s1">&#39;Type9&#39;</span><span class="p">,</span><span class="s1">&#39;Type10&#39;</span><span class="p">,</span><span class="s1">&#39;Type11&#39;</span><span class="p">]</span>
+    <span class="n">hint</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">all_density_maps</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">atom_type</span> <span class="ow">in</span> <span class="n">atom_types</span><span class="p">:</span>
+        <span class="n">new_atoms</span><span class="o">=</span><span class="n">atoms_to_map</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">atom_type</span><span class="p">)</span> <span class="c1"># returns df only containing the atoms for choosen type</span>
+        <span class="n">density_map</span><span class="p">,</span><span class="n">flag</span><span class="o">=</span><span class="n">create_density_map</span><span class="p">(</span><span class="n">new_atoms</span><span class="p">)</span>
         
-    <span class="k">print</span> <span class="s1">&#39;ready&#39;</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="o">!=</span><span class="mi">1</span><span class="p">:</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">density_map</span><span class="p">):</span> <span class="c1"># if there are atoms of chosen type (every density map that isn,t just zeroes)</span>
+                <span class="n">all_density_maps</span><span class="p">[</span><span class="n">atom_type</span><span class="p">]</span><span class="o">=</span><span class="n">density_map</span>
+                <span class="n">plot_map</span><span class="p">(</span><span class="n">density_map</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">all_density_maps</span><span class="p">[</span><span class="n">atom_type</span><span class="p">]</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">120</span><span class="p">,</span><span class="mi">120</span><span class="p">,</span><span class="mi">120</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">all_density_maps</span><span class="p">[</span><span class="n">atom_type</span><span class="p">]</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">120</span><span class="p">,</span><span class="mi">120</span><span class="p">,</span><span class="mi">120</span><span class="p">))</span>
+            <span class="n">hint</span><span class="o">=</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">hint</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> 
+        <span class="k">print</span> <span class="n">argv</span><span class="p">,</span> <span class="s1">&#39;Is having trouble fitting in the grid&#39;</span>
         
-<span class="n">main</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">all_density_maps</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> 
+    
+    
 </pre></div>
 
 </div>
