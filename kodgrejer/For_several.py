@@ -7,6 +7,8 @@
 import Get_Densities
 import Get_GDT_TS
 import sys
+import os
+import re
 import numpy as np
 
 
@@ -32,19 +34,41 @@ def make_4Darray(filename):
 # In[ ]:
 
 
+def get_target(filename):
+    f=open(filename)
+    f.close()
+    f_path=os.path.realpath(f.name)
+    
+    target_match=re.search('(T\d\d\d\d)',f_path)
+    
+    if target_match:
+        target_name=target_match.group(1)
+    
+        return target_name 
+    
+    
+
+
+# In[ ]:
+
+
 def main():
     
     filenames=sys.argv[1:]
-    #for every file create 11 densitymaps. Generates dict of dicts. Kanske inte är smart?
+    #for every file create 11 densitymaps. 
     print ('Computing atom densities')
     counter=1
     no_passed=0
     all_arrays=[]
     all_scores=[]
     
-
+    
+    print (counter, 'of', len(filenames))
+    
     for filename in filenames: 
-        print (counter),('of'), (len(filenames))
+        
+        if counter%25==0:
+            print (counter,'of', len(filenames))
         
         #Try to create densitymaps and collect GDT score
         try: 
@@ -61,16 +85,21 @@ def main():
             counter+=1
         
         except IOError: 
-            print 'cannot find', filename
+            print ('cannot find', filename)
             no_passed+=1
             counter+=1
             continue
     
+    print (counter-1,'of', len(filenames))
+    
+    target_name=get_target(filenames[0])
+    
+    
+    
 
     #generates zip_file with one array shape (x,11,120,120,120) where x is number of proteins used
-    #np.savez_compressed('test_data_3prot', all_arrays=all_arrays, all_scores=all_scores)
-    print no_passed, 'files passed'
-    print ('ready')
+    np.savez_compressed(target_name, all_arrays=all_arrays, all_scores=all_scores)
+    print (no_passed, 'files ignored')
 
         
 main()

@@ -11930,7 +11930,7 @@ div#notebook {
     <span class="c1">#Only goes this far if the protein fits in the grid. </span>
     <span class="c1">#The coordinates (a list of several [x y z]&#39;s) are transposed to a list of l=[x....][y...][z...]   </span>
     <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">x_s</span><span class="p">,</span> <span class="n">y_s</span><span class="p">,</span> <span class="n">z_s</span><span class="p">]</span>
-    <span class="n">coords</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">)</span> 
+    <span class="n">coords</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">))</span> 
     
     <span class="c1">#Looping over every coordinate in the grid</span>
     <span class="c1">#Since the wanted resolution of the grid is 1Angstrom, the coordinates are converted to integers.</span>
@@ -11939,7 +11939,7 @@ div#notebook {
         <span class="n">y</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">z</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
         
-        <span class="k">if</span> <span class="n">x</span><span class="o">&lt;</span><span class="mi">118</span> <span class="ow">and</span> <span class="n">y</span><span class="o">&lt;</span><span class="mi">118</span> <span class="ow">and</span> <span class="n">z</span><span class="o">&lt;</span><span class="mi">118</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">x</span><span class="o">&lt;</span><span class="mi">118</span> <span class="ow">and</span> <span class="n">y</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">y</span><span class="o">&lt;</span><span class="mi">118</span> <span class="ow">and</span> <span class="n">z</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">z</span><span class="o">&lt;</span><span class="mi">118</span><span class="p">:</span>
         
 
             <span class="c1">#For all positions neighbouring (within a distance of 2 Angstrom)  </span>
@@ -12044,7 +12044,7 @@ div#notebook {
         <span class="k">if</span> <span class="n">flag</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> 
             <span class="n">hint</span><span class="o">=</span><span class="mi">1</span>
     <span class="k">if</span> <span class="n">hint</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
-        <span class="k">print</span> <span class="p">(</span><span class="n">argv</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;have atoms outside the grid&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="s1">&#39;have atoms outside the grid&#39;</span><span class="p">)</span>
           
     <span class="k">return</span> <span class="n">all_density_maps</span>
 

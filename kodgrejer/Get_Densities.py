@@ -137,7 +137,7 @@ def create_density_map(atoms):
     #Only goes this far if the protein fits in the grid. 
     #The coordinates (a list of several [x y z]'s) are transposed to a list of l=[x....][y...][z...]   
     coords=[x_s, y_s, z_s]
-    coords=zip(*coords) 
+    coords=list(zip(*coords)) 
     
     #Looping over every coordinate in the grid
     #Since the wanted resolution of the grid is 1Angstrom, the coordinates are converted to integers.
@@ -146,7 +146,7 @@ def create_density_map(atoms):
         y=int(coords[i][1])
         z=int(coords[i][2])
         
-        if x<118 and y<118 and z<118:
+        if x>0 and x<118 and y>0 and y<118 and z>0 and z<118:
         
 
             #For all positions neighbouring (within a distance of 2 Angstrom)  
@@ -237,7 +237,7 @@ def main(argv):
         if flag==1: 
             hint=1
     if hint==1:
-        print (argv), ('have atoms outside the grid')
+        print (argv, 'have atoms outside the grid')
           
     return all_density_maps
 

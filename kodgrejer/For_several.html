@@ -11779,6 +11779,8 @@ div#notebook {
 <div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">Get_Densities</span>
 <span class="kn">import</span> <span class="nn">Get_GDT_TS</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 </pre></div>
 
@@ -11818,19 +11820,48 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">get_target</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">f_path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="n">target_match</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;(T\d\d\d\d)&#39;</span><span class="p">,</span><span class="n">f_path</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">target_match</span><span class="p">:</span>
+        <span class="n">target_name</span><span class="o">=</span><span class="n">target_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+        <span class="k">return</span> <span class="n">target_name</span> 
+    
+    
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     
     <span class="n">filenames</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-    <span class="c1">#for every file create 11 densitymaps. Generates dict of dicts. Kanske inte är smart?</span>
+    <span class="c1">#for every file create 11 densitymaps. </span>
     <span class="k">print</span> <span class="p">(</span><span class="s1">&#39;Computing atom densities&#39;</span><span class="p">)</span>
     <span class="n">counter</span><span class="o">=</span><span class="mi">1</span>
     <span class="n">no_passed</span><span class="o">=</span><span class="mi">0</span>
     <span class="n">all_arrays</span><span class="o">=</span><span class="p">[]</span>
     <span class="n">all_scores</span><span class="o">=</span><span class="p">[]</span>
     
-
+    
+    <span class="k">print</span> <span class="p">(</span><span class="n">counter</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">))</span>
+    
     <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span> 
-        <span class="k">print</span> <span class="p">(</span><span class="n">counter</span><span class="p">),(</span><span class="s1">&#39;of&#39;</span><span class="p">),</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">counter</span><span class="o">%</span><span class="k">25</span>==0:
+            <span class="k">print</span> <span class="p">(</span><span class="n">counter</span><span class="p">,</span><span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">))</span>
         
         <span class="c1">#Try to create densitymaps and collect GDT score</span>
         <span class="k">try</span><span class="p">:</span> 
@@ -11847,16 +11878,21 @@ div#notebook {
             <span class="n">counter</span><span class="o">+=</span><span class="mi">1</span>
         
         <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span> 
-            <span class="k">print</span> <span class="s1">&#39;cannot find&#39;</span><span class="p">,</span> <span class="n">filename</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s1">&#39;cannot find&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
             <span class="n">no_passed</span><span class="o">+=</span><span class="mi">1</span>
             <span class="n">counter</span><span class="o">+=</span><span class="mi">1</span>
             <span class="k">continue</span>
     
+    <span class="k">print</span> <span class="p">(</span><span class="n">counter</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">))</span>
+    
+    <span class="n">target_name</span><span class="o">=</span><span class="n">get_target</span><span class="p">(</span><span class="n">filenames</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    
+    
+    
 
     <span class="c1">#generates zip_file with one array shape (x,11,120,120,120) where x is number of proteins used</span>
-    <span class="c1">#np.savez_compressed(&#39;test_data_3prot&#39;, all_arrays=all_arrays, all_scores=all_scores)</span>
-    <span class="k">print</span> <span class="n">no_passed</span><span class="p">,</span> <span class="s1">&#39;files passed&#39;</span>
-    <span class="k">print</span> <span class="p">(</span><span class="s1">&#39;ready&#39;</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="n">target_name</span><span class="p">,</span> <span class="n">all_arrays</span><span class="o">=</span><span class="n">all_arrays</span><span class="p">,</span> <span class="n">all_scores</span><span class="o">=</span><span class="n">all_scores</span><span class="p">)</span>
+    <span class="k">print</span> <span class="p">(</span><span class="n">no_passed</span><span class="p">,</span> <span class="s1">&#39;files ignored&#39;</span><span class="p">)</span>
 
         
 <span class="n">main</span><span class="p">()</span>
