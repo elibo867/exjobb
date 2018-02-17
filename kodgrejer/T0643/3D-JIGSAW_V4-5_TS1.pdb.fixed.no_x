@@ -1,0 +1,16 @@
+PFRMAT TS
+TARGET T0643
+MODEL  1
+PARENT N/A
+ATOM      1  N   HIS A           3.869   2.748   8.825  1.00  0.00
+ATOM      2  CA  HIS A           4.162   3.626   7.717  1.00  0.00
+ATOM      3  C   HIS A           2.997   4.579   7.504  1.00  0.00
+ATOM      4  O   HIS A           2.369   4.597   6.447  1.00  0.00
+ATOM      5  CB  HIS A           4.383   2.818   6.437  1.00  0.00
+ATOM      6  CG  HIS A           4.733   3.655   5.246  1.00  0.00
+ATOM      7  ND1 HIS A           5.954   4.279   5.107  1.00  0.00
+ATOM      8  CD2 HIS A           4.054   4.054   4.022  1.00  0.00
+ATOM      9  CE1 HIS A           5.972   4.953   3.944  1.00  0.00
+ATOM     10  NE2 HIS A           4.835   4.823   3.288  1.00  0.00
+TER
+END

@@ -11,7 +11,7 @@ import sys
 from biopandas.pdb import PandasPdb
 from math import exp
 from matplotlib import cm
-from scipy import spatial
+#from scipy import spatial
 from mpl_toolkits.mplot3d import Axes3D
 #remember to comment following row if running code in terminal 
 #%matplotlib inline  
@@ -209,37 +209,71 @@ def plot_map(dens_map):
     plt.show()
 
 
+# In[ ]:
+
+
+def make_4Darray(density_dict):
+    '''Extract density maps from dictionary to np.array'''
+    #get the dictionary with atom densities - why not do an array immediately?
+    #density_dict=Get_Densities.main(filename)
+    
+    #Concatenate the 11 maps into one single array
+    for key in sorted(density_dict): 
+        #The first time, need to  create the new array
+        if key==1: 
+            density_array=np.expand_dims((density_dict[key]),axis=0)
+        else:
+            density_array=np.concatenate((density_array, np.expand_dims((density_dict[key]),axis=0)), axis=0)
+            
+    return density_array
+
+
 # In[28]:
 
 
 def main(argv):
 
+    
     ppdb=PandasPdb()
     ppdb=ppdb.read_pdb(argv) 
     atoms=ppdb.df['ATOM']
+    
+    #relocate centre of gravity to origo
     atoms=centre_model(atoms)
     
-    atom_types=[1,2,3,4,5,6,7,8,9,10,11]
+    #there are 11 atom types
+    atom_types=list(range(1,12)) 
+    
+    #flag for indication if the protein is to big (having atoms outside of the 120*120*120 grid)
     hint=0
+    
     all_density_maps={}
+    
     for atom_type in atom_types:
-        new_atoms=atoms_to_map(atoms, atom_type) # returns df only containing the atoms for choosen type
+        #create 120x120x120 densitymap (array only containting the atoms for choosen type)
+        new_atoms=atoms_to_map(atoms, atom_type) 
         density_map,flag=create_density_map(new_atoms)
         
-        #Put following stuff in a sub-function instead? 
-        
-        if np.any(density_map): # if there are atoms of chosen type (every density map that isn,t just zeroes)
-            all_density_maps[atom_type]=density_map
-            #plot_map(density_map)
-        else:
-            all_density_maps[atom_type]=np.zeros((120,120,120))
-    
+        #if any of the density maps are to big, the hint will be set to one
         if flag==1: 
             hint=1
+        
+        #if there are atom densities in the map - add to dictionary and plot 
+        if not np.any(density_map):  
+            all_density_maps[atom_type]=np.zeros((120,120,120))    
+            
+        else:
+            all_density_maps[atom_type]=density_map
+            #plot_map(density_map)
+      
+    #print if the protein was to large
     if hint==1:
-        print (argv, 'have atoms outside the grid')
-          
-    return all_density_maps
+        print (argv, 'had atoms outside the grid')
+             
+    #make array out of dictionary.. Why making a dict at all? 
+    dens_array=make_4Darray(all_density_maps)
+    
+    return dens_array
 
 if __name__ == '__main__':
     main(sys.argv) 

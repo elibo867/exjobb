@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>For_several</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>Untitled2</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
 <style type="text/css">
@@ -11773,30 +11773,33 @@ div#notebook {
 
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span></span><span class="kn">import</span> <span class="nn">Get_Densities</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-
-
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">density_maps</span><span class="o">=</span><span class="p">{}</span>
-    <span class="n">filenames</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-    <span class="c1">#for every file create 11 densitymaps. Generates dict of dicts. Kanske inte är smart?</span>
-    <span class="k">print</span> <span class="s1">&#39;Computing atom densities&#39;</span>
-    <span class="n">counter</span><span class="o">=</span><span class="mi">1</span>
-    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span> 
-        <span class="n">density_maps</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">=</span><span class="n">Get_Densities</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="k">print</span> <span class="n">counter</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span>
-        <span class="n">counter</span><span class="o">+=</span><span class="mi">1</span>
-        
-    <span class="k">print</span> <span class="s1">&#39;ready&#39;</span>
-        
-<span class="n">main</span><span class="p">()</span>
+<div class=" highlight hl-ipython2"><pre><span></span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[3]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]</pre>
+</div>
+
+</div>
+
 </div>
 </div>
 

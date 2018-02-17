@@ -18,9 +18,16 @@ def extract_score(filename):
     
     #get GDT_TS_score
     GDT_TS_match=re.search('GDT-TS-score=\s(\d.\d\d\d\d)',text)
-    score=float(GDT_TS_match.group(1))
+    try:
+        score=float(GDT_TS_match.group(1))
+        return score
     
-    return score 
+    except Exception as e:
+        print (e)
+        return 'No GDT_TS-score in TM file'
+        
+        
+     
 
 
 # In[7]:

@@ -10,6 +10,7 @@ import sys
 import os
 import re
 import numpy as np
+import zipfile
 
 
 # In[ ]:
@@ -39,6 +40,7 @@ def get_target(filename):
     f.close()
     f_path=os.path.realpath(f.name)
     
+    #Looking at the path to see which target that's beeing processed
     target_match=re.search('(T\d\d\d\d)',f_path)
     
     if target_match:
@@ -62,43 +64,60 @@ def main():
     all_arrays=[]
     all_scores=[]
     
-    
-    print (counter, 'of', len(filenames))
-    
-    for filename in filenames: 
-        
-        if counter%25==0:
-            print (counter,'of', len(filenames))
-        
-        #Try to create densitymaps and collect GDT score
-        try: 
-            #compute the 11 density maps
-            dens_array=make_4Darray(filename)
-            #create list of arrays: [all_maps_prot1, all_maps_prot2,...] 
-            all_arrays.append(dens_array)
-            
-            #find GDT_TS score
-            filename=filename+('.fixed.TM')
-            GDT=Get_GDT_TS.main(filename)
-            all_scores.append(GDT)
-            
-            counter+=1
-        
-        except IOError: 
-            print ('cannot find', filename)
-            no_passed+=1
-            counter+=1
-            continue
-    
-    print (counter-1,'of', len(filenames))
-    
     target_name=get_target(filenames[0])
+    zip_name=target_name+'.npz'
+    os.remove(zip_name)
+    
+    with zipfile.ZipFile(zip_name, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
+        for filename in filenames: 
+        
+            if counter==1 or counter%5==0:
+                print (counter,'of', len(filenames))
+        
+            #Try to create densitymaps and collect GDT score. If it doesn't work - 
+            try: 
+                #compute the 11 density maps
+                #dens_array=make_4Darray(filename)
+                dens_array=Get_Densities.main(filename)
+                #create list of arrays: [all_maps_prot1, all_maps_prot2,...] 
+                #all_arrays.append(dens_array)
+            
+                #find GDT_TS score - if it exists. Otherwise, returns 'No GDT_TS-score in TM file' 
+                filename=filename+('.fixed.TM')
+                GDT=Get_GDT_TS.main(filename)
+            
+                #If there is no GDT score in the TM file 
+                if isinstance(GDT, str):
+                    print (GDT)
+                    print(filename)
+                    no_passed+=1
+                    counter+=1
+                    continue
+                tmpfilename='arr_{}.npy'.format(counter-1-no_passed)
+                np.savez(tmpfilename, dens_array=dens_array, GDT=GDT)
+                zf.write(tmpfilename)
+                
+                os.remove(tmpfilename)
+                
+                all_scores.append(GDT)
+                counter+=1
+        
+            except Exception as e:
+                print (e)
+                print (filename)
+                no_passed+=1
+                counter+=1
+                continue
+    
+    if counter!=2 and (counter+1)%5!=0:
+        print (counter-1,'of', len(filenames))
+    
     
     
     
 
     #generates zip_file with one array shape (x,11,120,120,120) where x is number of proteins used
-    np.savez_compressed(target_name, all_arrays=all_arrays, all_scores=all_scores)
+    #np.savez_compressed(target_name+'_scores', all_scores=all_scores)
     print (no_passed, 'files ignored')
 
         
