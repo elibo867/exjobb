@@ -66,14 +66,20 @@ def main():
     
     target_name=get_target(filenames[0])
     zip_name=target_name+'.npz'
-    os.remove(zip_name)
+    
+    #better to check if the filename exists and then add something to the name . instead of overwriting
+    try:
+        os.remove(zip_name)
+    except FileNotFoundError:
+        pass
     
     with zipfile.ZipFile(zip_name, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
         for filename in filenames: 
         
-            if counter==1 or counter%5==0:
-                print (counter,'of', len(filenames))
-        
+            #if counter==1 or counter%5==0:
+                #print (counter,'of', len(filenames))
+            print (counter,'of', len(filenames), '--', filename)    
+
             #Try to create densitymaps and collect GDT score. If it doesn't work - 
             try: 
                 #compute the 11 density maps
@@ -94,7 +100,7 @@ def main():
                     counter+=1
                     continue
                 tmpfilename='arr_{}.npy'.format(counter-1-no_passed)
-                np.savez(tmpfilename, dens_array=dens_array, GDT=GDT)
+                np.save(tmpfilename, dens_array)
                 zf.write(tmpfilename)
                 
                 os.remove(tmpfilename)
@@ -109,15 +115,12 @@ def main():
                 counter+=1
                 continue
     
-    if counter!=2 and (counter+1)%5!=0:
-        print (counter-1,'of', len(filenames))
+    #if counter!=2 and (counter+1)%5!=0:
+        #print (counter-1,'of', len(filenames))
     
     
-    
-    
-
     #generates zip_file with one array shape (x,11,120,120,120) where x is number of proteins used
-    #np.savez_compressed(target_name+'_scores', all_scores=all_scores)
+    np.savez_compressed(target_name+'_scores', all_scores=all_scores)
     print (no_passed, 'files ignored')
 
         
