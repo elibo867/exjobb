@@ -1,10 +1,11 @@
 
 # coding: utf-8
 
-# In[7]:
+# In[ ]:
 
 
 import numpy as np
+from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import Conv3D, Activation, MaxPooling3D
 from keras.layers import BatchNormalization, Reshape, Dense
@@ -13,10 +14,32 @@ from keras import losses
 
 
 
-# In[8]:
+# In[ ]:
 
 
 def load_data(): 
+    
+    density_arrays=np.load('../../../proj/x_elibo/generate_dataset/casp9/casp9_results/T0515.npz')
+    score_arrays=np.load('../../../proj/x_elibo/generate_dataset/casp9/casp9_results/T0515_scores.npz')
+
+    l=len(density_arrays.files)
+
+
+    x=np.zeros((11,120,120,120))
+    #concatenate all protein density maps into one array with right shape 
+    #first, create array, thereafter add the rest! 
+    for i in range(l): 
+        if i==0:   
+            x=np.expand_dims(density_arrays[density_arrays.files[i]], axis=0)
+            print x.shape
+        else: 
+            x=np.concatenate((x,np.expand_dims(density_arrays[density_arrays.files[i]], axis=0)))
+            print x.shape
+            
+    y=score_arrays['arr_0']
+    
+    x_train,x_test, y_train, y_test=train_test_split(
+        x,y,test_size=0.33) #random_state=?? 42?? 
     
     '''
     
@@ -35,7 +58,7 @@ def load_data():
 
     #load y-test data
     y_testing_array=np.load('y_test_3.npz')
-    y_test=y_testing_array['arr_0']'''
+    y_test=y_testing_array['arr_0']
     
     training_array=np.load('training_data_6prot.npz')
     x_train=training_array['all_arrays']
@@ -43,14 +66,14 @@ def load_data():
     
     testing_array=np.load('test_data_3prot.npz')
     x_test=testing_array['all_arrays']
-    y_test=testing_array['all_scores']  
+    y_test=testing_array['all_scores']'''  
     
     
     
     return x_train, y_train, x_test, y_test
 
 
-# In[10]:
+# In[ ]:
 
 
 def main():

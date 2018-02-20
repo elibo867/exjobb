@@ -11,25 +11,7 @@ import os
 import re
 import numpy as np
 import zipfile
-
-
-# In[ ]:
-
-
-def make_4Darray(filename):
-    '''Extract density maps from dictionary to np.array'''
-    #get the dictionary with atom densities - why not do an array immediately?
-    density_dict=Get_Densities.main(filename)
-    
-    #Concatenate the 11 maps into one single array
-    for key in sorted(density_dict): 
-        #The first time, need to  create the new array
-        if key==1: 
-            density_array=np.expand_dims((density_dict[key]),axis=0)
-        else:
-            density_array=np.concatenate((density_array, np.expand_dims((density_dict[key]),axis=0)), axis=0)
-            
-    return density_array
+from tempfile import TemporaryFile
 
 
 # In[ ]:
@@ -47,7 +29,6 @@ def get_target(filename):
         target_name=target_match.group(1)
     
         return target_name 
-    
     
 
 
@@ -75,15 +56,12 @@ def main():
     
     with zipfile.ZipFile(zip_name, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
         for filename in filenames: 
-        
-            #if counter==1 or counter%5==0:
-                #print (counter,'of', len(filenames))
+
             print (counter,'of', len(filenames), '--', filename)    
 
-            #Try to create densitymaps and collect GDT score. If it doesn't work - 
+            #Try collect density maps and GDT score. If it doesn't work - 
             try: 
                 #compute the 11 density maps
-                #dens_array=make_4Darray(filename)
                 dens_array=Get_Densities.main(filename)
                 #create list of arrays: [all_maps_prot1, all_maps_prot2,...] 
                 #all_arrays.append(dens_array)
@@ -99,7 +77,8 @@ def main():
                     no_passed+=1
                     counter+=1
                     continue
-                tmpfilename='arr_{}.npy'.format(counter-1-no_passed)
+                    
+                tmpfilename='{0}arr_{1}.npy'.format(target_name+'_', counter-1-no_passed)
                 np.save(tmpfilename, dens_array)
                 zf.write(tmpfilename)
                 

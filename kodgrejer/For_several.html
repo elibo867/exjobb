@@ -11783,32 +11783,7 @@ div#notebook {
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">zipfile</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span></span><span class="k">def</span> <span class="nf">make_4Darray</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Extract density maps from dictionary to np.array&#39;&#39;&#39;</span>
-    <span class="c1">#get the dictionary with atom densities - why not do an array immediately?</span>
-    <span class="n">density_dict</span><span class="o">=</span><span class="n">Get_Densities</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-    
-    <span class="c1">#Concatenate the 11 maps into one single array</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">density_dict</span><span class="p">):</span> 
-        <span class="c1">#The first time, need to  create the new array</span>
-        <span class="k">if</span> <span class="n">key</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> 
-            <span class="n">density_array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">((</span><span class="n">density_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">density_array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">density_array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">((</span><span class="n">density_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            
-    <span class="k">return</span> <span class="n">density_array</span>
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="kn">import</span> <span class="n">TemporaryFile</span>
 </pre></div>
 
 </div>
@@ -11833,7 +11808,6 @@ div#notebook {
         <span class="n">target_name</span><span class="o">=</span><span class="n">target_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
     
         <span class="k">return</span> <span class="n">target_name</span> 
-    
     
 </pre></div>
 
@@ -11868,15 +11842,12 @@ div#notebook {
     
     <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">zip_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span> 
-        
-            <span class="c1">#if counter==1 or counter%5==0:</span>
-                <span class="c1">#print (counter,&#39;of&#39;, len(filenames))</span>
+
             <span class="k">print</span> <span class="p">(</span><span class="n">counter</span><span class="p">,</span><span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">),</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>    
 
-            <span class="c1">#Try to create densitymaps and collect GDT score. If it doesn&#39;t work - </span>
+            <span class="c1">#Try collect density maps and GDT score. If it doesn&#39;t work - </span>
             <span class="k">try</span><span class="p">:</span> 
                 <span class="c1">#compute the 11 density maps</span>
-                <span class="c1">#dens_array=make_4Darray(filename)</span>
                 <span class="n">dens_array</span><span class="o">=</span><span class="n">Get_Densities</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
                 <span class="c1">#create list of arrays: [all_maps_prot1, all_maps_prot2,...] </span>
                 <span class="c1">#all_arrays.append(dens_array)</span>
@@ -11892,7 +11863,8 @@ div#notebook {
                     <span class="n">no_passed</span><span class="o">+=</span><span class="mi">1</span>
                     <span class="n">counter</span><span class="o">+=</span><span class="mi">1</span>
                     <span class="k">continue</span>
-                <span class="n">tmpfilename</span><span class="o">=</span><span class="s1">&#39;arr_{}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">counter</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">no_passed</span><span class="p">)</span>
+                    
+                <span class="n">tmpfilename</span><span class="o">=</span><span class="s1">&#39;{0}arr_{1}.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_name</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="n">counter</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">no_passed</span><span class="p">)</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">tmpfilename</span><span class="p">,</span> <span class="n">dens_array</span><span class="p">)</span>
                 <span class="n">zf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tmpfilename</span><span class="p">)</span>
                 

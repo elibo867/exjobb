@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[2]:
+# In[ ]:
 
 
 import numpy as np
@@ -14,17 +14,10 @@ l=len(density_arrays.files)
 
 x=np.zeros((11,120,120,120))
 #concatenate all protein density maps into one array with right shape 
+#first, create array, thereafter add the rest! 
 for i in range(l): 
     if i==0:   
         x=np.expand_dims(density_arrays[density_arrays.files[i]], axis=0)
-        print x.shape
     else: 
         x=np.concatenate((x,np.expand_dims(density_arrays[density_arrays.files[i]], axis=0)))
-        print x.shape
-
-
-# In[3]:
-
-
-
 
